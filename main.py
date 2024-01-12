@@ -1,24 +1,19 @@
+from logger_config import setup_logger
+from endpoint_functions import router
 import asyncio
 import fastapi
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from data.opennode_fastapi import ValidationError
 import uvloop
 from uvicorn import Config, Server
 from decouple import Config as DecoupleConfig
-from logger_config import setup_logger
 
 config = DecoupleConfig(".env")
 UVICORN_PORT = config.get("UVICORN_PORT", cast=int)
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 logger = setup_logger()
-
-description_string = """
-🎢 Pastel RPC Rest Wrapper: Easily access fully documented endpoints for all of the RPC methods exposed by the `pasteld` daemon. 💸
-"""
-
 
 app = fastapi.FastAPI(
     title="Pastel-RPC-REST-Wrapper",
@@ -27,12 +22,14 @@ app = fastapi.FastAPI(
     redoc_url="/redoc"
 )
 
+app.include_router(router, prefix='', tags=['main'])
+
 # Custom Exception Handling Middleware
 @app.middleware("http")
 async def custom_exception_handling(request: Request, call_next):
     try:
         return await call_next(request)
-    except ValidationError as ve:
+    except RequestValidationError as ve:
         logger.error(f"Validation error: {ve}")
         return JSONResponse(status_code=ve.status_code, content={"detail": ve.error_msg})
     except RequestValidationError as re:

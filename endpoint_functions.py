@@ -1,30 +1,17 @@
 import service_functions
-from fastapi import APIRouter, Depends
+from logger_config import setup_logger
+from service_functions import get_local_rpc_settings_func
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, Field
 from json import JSONEncoder
 from datetime import datetime
-from typing import Optional, List, Dict, Any, Field, Union
-from pydantic import BaseModel, BaseSettings
-from logger_config import setup_logger
-
+from typing import Optional, List, Dict, Any, Union
 logger = setup_logger()
-
-# Configuration and environment management
-class Settings(BaseSettings):
-    rpc_host: str
-    rpc_port: int
-    rpc_user: str
-    rpc_password: str
-
-    class Config:
-        env_file = ".env"
-
-settings = Settings()
-
 
 # RPC Client Dependency
 async def get_rpc_connection():
-    # Create and return a new RPC connection based on environment settings
-    return service_functions.AsyncAuthServiceProxy(f"http://{settings.rpc_user}:{settings.rpc_password}@{settings.rpc_host}:{settings.rpc_port}")
+    rpc_host, rpc_port, rpc_user, rpc_password, other_flags = get_local_rpc_settings_func() 
+    return service_functions.AsyncAuthServiceProxy(f"http://{rpc_user}:{rpc_password}@{rpc_host}:{rpc_port}")
 
 router = APIRouter()
 
@@ -717,9 +704,48 @@ class GetRawTransactionResponse(BaseModel):
 class GetTxOutProofResponse(BaseModel):
     data: str        
     
+class TransactionInput(BaseModel):
+    txid: str
+    vout: int
+    sequence: Optional[int] = None
+
+class AddressAmount(BaseModel):
+    address: str
+    amount: float
+
+class CreateRawTransactionRequest(BaseModel):
+    transactions: List[TransactionInput]
+    addresses: Dict[str, float]
+    locktime: Optional[int] = 0
+    expiryheight: Optional[int] = None
+
+class CreateRawTransactionResponse(BaseModel):
+    transaction: str
     
+class DecodeRawTransactionResponse(BaseModel):
+    txid: str
+    size: int
+    overwintered: bool
+    version: int
+    versiongroupid: Optional[str] = None
+    locktime: int
+    expiryheight: Optional[int] = None
+    vin: List[Vin]
+    vout: List[Vout]
+
+class DecodeRawTransactionRequest(BaseModel):
+    hexstring: str    
     
-    
+class DecodeScriptResponse(BaseModel):
+    asm: str
+    hex: str
+    type: str
+    reqSigs: int
+    addresses: List[str]
+    p2sh: str
+
+class DecodeScriptRequest(BaseModel):
+    hex: str
     
     
     
@@ -3376,8 +3402,7 @@ async def get_block_header(block_hash: str, verbose: bool = True, rpc_connection
 ### Note
 - It's important to ensure the block index is within the valid range of the blockchain.""",
             response_description="Hex-encoded hash of the block at the specified index")
-async def get_block_hash(request: GetBlockHashRequest, 
-                         rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
+async def get_block_hash(request: GetBlockHashRequest, rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
     block_hash = await rpc_connection.getblockhash(request.index)
     return GetBlockHashResponse(hash=block_hash)
 
@@ -3421,7 +3446,11 @@ async def get_block_hash(request: GetBlockHashRequest,
 ### Note
 - Used for detailed blockchain exploration and data analysis.""",
             response_description="Block data in specified format based on verbosity level")
-async def get_block(block_identifier: str, verbosity: int = Field(1, ge=0, le=2), rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
+async def get_block(
+    block_identifier: str,
+    verbosity: int = Query(1, ge=0, le=2), 
+    rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)
+):
     block_data = await rpc_connection.getblock(block_identifier, verbosity)
     # Depending on verbosity, parse and return the appropriate response model
     if verbosity == 0:
@@ -3952,3 +3981,173 @@ async def get_tx_out_proof(txids: List[str], block_hash: Optional[str] = None,
                            rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
     proof_data = await rpc_connection.gettxoutproof(txids, block_hash)
     return GetTxOutProofResponse(data=proof_data)    
+
+
+
+
+@router.post("/createrawtransaction",
+             response_model=CreateRawTransactionResponse,
+             tags=["Raw Transaction Methods"],
+             summary="Create a raw transaction",
+             description="""Create a transaction spending the given inputs and sending to the given addresses.
+
+### Description
+- This endpoint creates a hex-encoded raw transaction that spends the given inputs and sends to the specified addresses.
+- The transaction's inputs are not signed, and it is not stored in the wallet or transmitted to the network.
+
+### Input Parameters
+- `transactions`: A list of transaction inputs, each containing:
+    - `txid`: The transaction id.
+    - `vout`: The output number.
+    - `sequence`: (Optional) The sequence number.
+- `addresses`: A dictionary with addresses as keys and amounts as values.
+- `locktime`: (Optional) Raw locktime. Non-0 value also activates inputs.
+- `expiryheight`: (Optional) Expiry height of transaction (if Overwinter is active).
+
+### Example Request
+```json
+{
+    "transactions": [{"txid": "myid", "vout": 0}],
+    "addresses": {"address": 0.01},
+    "locktime": 0,
+    "expiryheight": 1000
+}
+```
+
+### Response
+- Returns a hex string of the transaction.
+
+### Example Response
+```json
+{
+    "transaction": "hex-encoded-transaction"
+}
+```
+
+### Possible Errors
+- HTTP 400: Bad Request if the parameters are invalid.
+- HTTP 500: Internal Server Error if there's an issue in processing the request.""",
+             response_description="Hex-encoded raw transaction")
+async def create_raw_transaction(request: CreateRawTransactionRequest, 
+                                 rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
+    # Your logic to call the RPC method and return the response
+    transaction_hex = await rpc_connection.createrawtransaction(request.transactions, request.addresses, request.locktime, request.expiryheight)
+    return CreateRawTransactionResponse(transaction=transaction_hex)
+
+
+
+
+@router.post("/decoderawtransaction",
+             response_model=DecodeRawTransactionResponse,
+             tags=["Raw Transaction Methods"],
+             summary="Decode a raw transaction",
+             description="""Decode a serialized, hex-encoded transaction and return a JSON object representing it.
+
+### Description
+- This endpoint decodes a raw, serialized, hex-encoded transaction and provides detailed information about it.
+
+### Input Parameters
+- `hexstring` (string, required): The hex-encoded transaction string to decode.
+
+### Example Request
+- `POST /decoderawtransaction` with body `{"hexstring": "hex-encoded-string"}`
+
+### Response
+- Returns a JSON object containing detailed information about the transaction, including `txid`, `size`, `overwintered` flag, `version`, `locktime`, `vin`, and `vout` fields.
+
+### Example Response
+```json
+{
+    "txid": "id",
+    "size": n,
+    "overwintered": true,
+    "version": n,
+    "versiongroupid": "hex",
+    "locktime": ttt,
+    "expiryheight": n,
+    "vin": [
+        {
+            "txid": "id",
+            "vout": n,
+            "scriptSig": {
+                "asm": "asm",
+                "hex": "hex"
+            },
+            "sequence": n
+        }
+    ],
+    "vout": [
+        {
+            "value": x.xxx,
+            "n": n,
+            "scriptPubKey": {
+                "asm": "asm",
+                "hex": "hex",
+                "reqSigs": n,
+                "type": "pubkeyhash",
+                "addresses": [
+                    "Ptor9ydHJuGpNWFAX3ZTu3bXevEhCaDVrsY"
+                ]
+            }
+        }
+    ]
+}
+```
+
+### Possible Errors
+- HTTP 400: Bad Request if the `hexstring` parameter is invalid or missing.
+- HTTP 500: Internal Server Error if there's an issue in processing the request.
+
+### Note
+- Useful for debugging transactions and understanding their structure.""",
+             response_description="Detailed information about the decoded transaction")
+async def decode_raw_transaction(request: DecodeRawTransactionRequest, 
+                                 rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
+    result = await rpc_connection.decoderawtransaction(request.hexstring)
+    return DecodeRawTransactionResponse(**result)
+
+
+
+
+@router.post("/decodescript",
+             response_model=DecodeScriptResponse,
+             tags=["Utility Methods"],
+             summary="Decode a hex-encoded script",
+             description="""Decode a hex-encoded script.
+
+### Description
+- This endpoint decodes a hex-encoded script and returns detailed information about it.
+
+### Input Parameters
+- `hex`: A string representing the hex-encoded script.
+
+### Example Request
+```json
+{
+    "hex": "hexstring"
+}
+```
+
+### Response
+- Returns a JSON object containing details about the script, such as its assembly representation, type, required signatures, associated addresses, and P2SH.
+
+### Example Response
+```json
+{
+    "asm": "asm",
+    "hex": "hex",
+    "type": "type",
+    "reqSigs": 1,
+    "addresses": ["address1", "address2"],
+    "p2sh": "address"
+}
+```
+
+### Possible Errors
+- HTTP 400: Bad Request if the hex parameter is invalid or missing.
+- HTTP 500: Internal Server Error if there's an issue in processing the request.""",
+             response_description="Decoded script information")
+async def decode_script(request: DecodeScriptRequest,
+                        rpc_connection: service_functions.AsyncAuthServiceProxy = Depends(get_rpc_connection)):
+    response = await rpc_connection.decodescript(request.hex)
+    return DecodeScriptResponse(**response)

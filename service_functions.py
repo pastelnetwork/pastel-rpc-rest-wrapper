@@ -48,6 +48,17 @@ def get_local_rpc_settings_func(directory_with_pastel_conf=os.path.expanduser("~
             current_value = line.strip().split('=')[1].strip()
             other_flags[current_flag] = current_value
     return rpchost, rpcport, rpcuser, rpcpassword, other_flags
+
+def write_rpc_settings_to_env_file_func(rpc_host, rpc_port, rpc_user, rpc_password, other_flags):
+    with open('.env', 'w') as f:
+        f.write(f"RPC_HOST={rpc_host}\n")
+        f.write(f"RPC_PORT={rpc_port}\n")
+        f.write(f"RPC_USER={rpc_user}\n")
+        f.write(f"RPC_PASSWORD={rpc_password}\n")
+        for current_flag in other_flags:
+            current_value = other_flags[current_flag]
+            f.write(f"{current_flag}={current_value}\n")
+    return
     
 def get_remote_rpc_settings_func():
     rpchost = '45.67.221.205'
