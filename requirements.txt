@@ -1,0 +1,7 @@
+asyncio
+fastapi
+pandas
+python-decouple
+starlette
+uvicorn[standard]
+uvloop
