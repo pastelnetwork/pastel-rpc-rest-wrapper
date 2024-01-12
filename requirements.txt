@@ -2,7 +2,6 @@ asyncio
 fastapi
 httpx
 pandas
-pydantic-settings
 python-decouple
 starlette
 uvicorn[standard]
