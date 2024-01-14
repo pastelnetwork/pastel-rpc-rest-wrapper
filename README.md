@@ -5,7 +5,7 @@
 This project is a complete FastAPI REST API wrapper for the Pastel Network's `pasteld` daemon, providing a user-friendly interface to interact with the Pastel blockchain. It exposes all RPC methods with thorough documentation, making it easier for developers to integrate Pastel blockchain functionalities into various applications.
 
 
-| ![Screenshot of the Swagger Page](https://github.com/pastelnetwork/pastel-rpc-rest-wrappe/blob/main/screenshot.png) | 
+| ![Screenshot of the Swagger Page](https://github.com/pastelnetwork/pastel-rpc-rest-wrapper/blob/master/screenshot.png) | 
 |:--:| 
 | *Pastel RPC REST Wrapper: Swagger Page* |
 
