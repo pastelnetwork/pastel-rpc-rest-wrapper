@@ -128,9 +128,7 @@ The API categorizes endpoints based on their functionality. Below is a list of a
 - `/z_mergetoaddress`
 - `/z_listoperationids`
 - `/z_getnotescount`
-- `/
-
-gettxfee/{txid}`
+- `/gettxfee/{txid}`
 - `/scanformissingtxs`
 - `/fixmissingtxs/{starting_height}`
 - `/backupwallet`
@@ -161,8 +159,7 @@ gettxfee/{txid}`
 - `/importaddress`
 - `/z_importwallet`
 - `/importwallet`
-- `/dumpprivkey
-
+- `/dumpprivkey`
 - `/z_exportwallet`
 - `/dumpwallet`
 - `/z_importkey`
