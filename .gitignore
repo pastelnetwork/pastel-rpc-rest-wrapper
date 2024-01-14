@@ -54,3 +54,4 @@ uploaded_image_files/
 venv/
 *_log
 old_application_log_files/
+old_logs/
