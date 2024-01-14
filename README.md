@@ -2,7 +2,7 @@
 
 ## Overview
 
-This project is a complete FastAPI REST API wrapper for the Pastel Network's `pasteld`, similar to `bitcoind`, providing a user-friendly interface to interact with the Pastel blockchain. It exposes all RPC methods with thorough documentation, making it easier for developers to integrate Pastel blockchain functionalities into various applications.
+This project is a complete FastAPI REST API wrapper for the Pastel Network's `pasteld` daemon, providing a user-friendly interface to interact with the Pastel blockchain. It exposes all RPC methods with thorough documentation, making it easier for developers to integrate Pastel blockchain functionalities into various applications.
 
 ## Features
 
