@@ -16,13 +16,12 @@ async def get_rpc_connection():
 router = APIRouter()
 
 tags_metadata = [
-    {"name": "High-Level Methods", "description": "Endpoints that are not actually part of the Pastel RPC API, but operate at a higher level of abstraction."},
-    {"name": "OpenAPI Methods", "description": "Endpoints that are interact with both the Pastel RPC API and also the Walletnode API to get information on Sense and Cascade."},
-    {"name": "Blockchain Methods", "description": "Endpoints for retrieving blockchain data"},
-    {"name": "Mining Methods", "description": "Endpoints for retrieving mining data"},
-    {"name": "Ticket Methods", "description": "Endpoints for retrieving blockchain ticket data"},
-    {"name": "Supernode Methods", "description": "Endpoints for retrieving Supernode data"},
-    {"name": "Network Methods", "description": "Endpoints for retrieving network data"},
+    {"name": "Blockchain Methods", "description": "Endpoints for working with blockchain data"},
+    {"name": "Mining Methods", "description": "Endpoints for working with mining related operations"},
+    {"name": "Ticket Methods", "description": "Endpoints for working with blockchain tickets"},
+    {"name": "Supernode Methods", "description": "Endpoints for working with Supernodes"},
+    {"name": "Wallet Methods", "description": "Endpoints for working with Wallets"},
+    {"name": "Network Methods", "description": "Endpoints for working with network data"},
     {"name": "Raw Transaction Methods", "description": "Endpoints for working with raw transactions"},
     {"name": "Utility Methods", "description": "Endpoints for various utility functions"},
     {"name": "Control Methods", "description": "Endpoints for various control methods"},
@@ -2574,7 +2573,7 @@ async def verify_message(request: VerifyMessageRequest, rpc_connection: service_
 
 @router.get("/getaddressmempool",
             response_model=GetAddressMempoolResponse,
-            tags=["Address Index Methods"],
+            tags=["Utility Methods"],
             summary="Get all mempool deltas for an address",
             description="""Retrieve all mempool deltas for a specified address.
 
@@ -2751,7 +2750,7 @@ async def import_address(request: ImportAddressRequest, rpc_connection: service_
 
 @router.post("/z_importwallet",
              response_model=ZImportWalletResponse,
-             tags=["Utility Methods"],
+             tags=["Wallet Methods"],
              summary="Import keys from a wallet export file",
              description="""Imports taddr and zaddr keys from a wallet export file. This is typically used after using `z_exportwallet`.
 
@@ -2837,7 +2836,7 @@ async def import_wallet(filename: str, rpc_connection: service_functions.AsyncAu
 
 @router.get("/dumpprivkey",
             response_model=DumpPrivKeyResponse,
-            tags=["Utility Methods"],
+            tags=["Wallet Methods"],
             summary="Reveal the private key for a given address",
             description="""Reveals the private key corresponding to the specified transparent address.
 
@@ -3002,7 +3001,7 @@ async def z_import_key(zkey: str, rescan: Optional[str] = "whenkeyisnew", start_
 
 @router.post("/z_importviewingkey",
              response_model=ZImportViewingKeyResponse,
-             tags=["Utility Methods"],
+             tags=["Wallet Methods"],
              summary="Import a viewing key into the wallet",
              description="""Import a viewing key into your wallet.
 
@@ -3049,7 +3048,7 @@ async def z_import_viewing_key(request: ZImportViewingKeyRequest,
 
 @router.post("/z_exportkey",
              response_model=ZExportKeyResponse,
-             tags=["Utility Methods"],
+             tags=["Wallet Methods"],
              summary="Reveal the private key corresponding to a z-address",
              description="""Reveals the private key corresponding to the specified z-address.
 
@@ -3094,7 +3093,7 @@ async def z_export_key(request: ZExportKeyRequest,
 
 @router.get("/z_exportviewingkey",
             response_model=ZExportViewingKeyResponse,
-            tags=["Utility Methods"],
+            tags=["Wallet Methods"],
             summary="Export the viewing key for a Z-address",
             description="""Export the viewing key for a specified Z-address (zaddr).
 
@@ -6072,7 +6071,7 @@ async def register_action_ticket(request: ActionTicketRequest,
 
 @router.post("/governance",
              response_model=GovernanceResponse,
-             tags=["Governance Methods"],
+             tags=["Utility Methods"],
              summary="Cast a vote or list governance tickets",
              description="""Perform governance-related actions such as voting for tickets or listing tickets/winners.
 
@@ -8686,7 +8685,7 @@ async def z_view_transaction(txid: str, rpc_connection: service_functions.AsyncA
 
 @router.get("/z_getoperationresult",
             response_model=ZGetOperationResultResponse,
-            tags=["Zcash Methods"],
+            tags=["Blockchain Methods"],
             summary="Retrieve the result and status of Zcash operations",
             description="""Retrieve the result and status of an operation which has finished, and then remove the operation from memory.
 
