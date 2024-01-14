@@ -61,9 +61,9 @@ def write_rpc_settings_to_env_file_func(rpc_host, rpc_port, rpc_user, rpc_passwo
     return
     
 def get_remote_rpc_settings_func():
-    rpchost = '45.67.221.205'
-    rpcuser = 'IzfUzMZI'
-    rpcpassword = 'ku5YhVtKSNWMIYp'
+    rpchost = '1.2.3.4'
+    rpcuser = 'IzfUzM'
+    rpcpassword = 'VtKSNWMIYp'
     rpcport = '9932'
     return rpchost, rpcport, rpcuser, rpcpassword    
 
