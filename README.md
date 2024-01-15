@@ -71,7 +71,7 @@ After installation, you can start the FastAPI server using:
 python3 main.py
 ```
 
-This will host the API on `http://localhost:8000` by default.
+This will host the API on `http://localhost:8007` by default.
 
 ## Endpoints List
 
