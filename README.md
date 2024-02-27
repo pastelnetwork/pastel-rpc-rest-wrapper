@@ -1,4 +1,5 @@
 # Pastel Network RPC API Wrapper
+![Illustration](https://raw.githubusercontent.com/pastelnetwork/pastel-rpc-rest-wrapper/master/rest_rpc_illustration.webp)
 
 ## Overview
 
